@@ -3,12 +3,12 @@ clone:
 
 
 update:
-		~/devbot/git pull
+		git pull
 
 
 install:
-		~/devbot/pip install -r requirements.txt
+		pip install -r requirements.txt
 
 
 run:
-		~/devbot/python3 -m devbot.py
+		python3 -m devbot.py
