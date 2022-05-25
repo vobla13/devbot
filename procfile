@@ -1,2 +1,0 @@
-web: python devbot.py
-worker: python devbot.py 
