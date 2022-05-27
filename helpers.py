@@ -57,8 +57,9 @@ def get_dev_status(dev):
     if current_dev is not None:
         d, h, m, s = timedelta_format(datetime.now() - current_dev.get('time'))
         user = current_dev.get('user')
+        chat_id = current_dev.get('chat_id')
         time = f'(+{h}h {m}m)'
-        return user, time
+        return user, time, chat_id
     else:
         return False
 
@@ -67,8 +68,8 @@ def get_dev_status(dev):
 def get_all_status():
     result = ''
     for dev in devs:
-        user, time = get_dev_status(dev)
-        result += f'{dev} | @{user} {time}\n'
+        user, time, chat_id = get_dev_status(dev)
+        result += f'{dev} | @{user} {time} | {chat_id}\n'
     return result
 
 
@@ -101,7 +102,9 @@ def free_dev(dev):
     if current_dev is not None:
         current_dev['user'] = 'free'
         current_dev['time'] = datetime.now()
-        current_dev['chat_id'] = 0
+        current_dev['chat_id'] = None
         return f'{dev} теперь свободен!'
     else:
         return f'{dev} не существует!'
+
+
