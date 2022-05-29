@@ -34,9 +34,9 @@ def status(message, res=False):
 # Занять dev по сообщению 'take dev(номер)'разбирается регуляркой
 @bot.message_handler(regexp='[Tt]ake [Dd]ev[0-9]')
 def take_dev(message):
+    dev = message.text[5:].lower()
     candidate_username = message.from_user.username
     candidate_chat_id = message.chat.id
-    dev = message.text[5:].lower()
     dev_username, dev_user_chat_id = helpers.get_dev_user(dev)
     
     # Проверяем, что dev существует
@@ -65,10 +65,10 @@ def take_dev(message):
             return markup
 
 
-        # Создаем обработчик колбеков нажатий
+        # Создаем обработчик колбеков нажатий и логику
         @bot.callback_query_handler(func=lambda call: True)
         def callback_query(call):
-            # Прокидываем данные из колбека внутрь
+            # Прокидываем данные из колбека внутрь функции
             action = call.data.split("_")[0]
             dev = call.data.split("_")[1]
             candidate_username = call.data.split("_")[2]
@@ -76,10 +76,10 @@ def take_dev(message):
             
             if action == 'yes':
                 bot.answer_callback_query(call.id, "Спасибо :)")
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Отдал {dev} -> @{candidate_username}')
                 helpers.free_dev(dev)
-                helpers.set_dev_user(dev, candidate_username, candidate_chat_id)
-                bot.send_message(candidate_chat_id, f'Ты забрал {dev}')
+                answer = helpers.set_dev_user(dev, candidate_username, candidate_chat_id)
+                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Отдал {dev} -> @{candidate_username}')
+                bot.send_message(candidate_chat_id, answer)
             else:
                 bot.answer_callback_query(call.id, "Ну ладно :)")
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Оставил {dev}')
@@ -87,26 +87,25 @@ def take_dev(message):
                 bot.send_message(candidate_chat_id, f'Подожди, {dev} еще нужен!')
 
 
-        # Отправляем запрос хозяину dev
+        # Отправляем запрос хозяину dev и пушим инлайн-клавиатуру
         bot.send_message(dev_user_chat_id, f'@{candidate_username} хочет отобрать у тебя {dev}!', reply_markup=gen_markup())
         
-
 
 # Освободить dev по сообщению 'free dev(номер)' разбирается регуляркой
 @bot.message_handler(regexp='[Ff]ree [Dd]ev[0-9]')
 def free_dev(message, res=False):
     dev = message.text[5:].lower()
-    result = helpers.free_dev(dev)
-    bot.send_message(message.chat.id, result, reply_to_message_id=message.message_id)
+    answer = helpers.free_dev(dev)
+    bot.send_message(message, answer)
 
 
 # Возвращает пользователя на dev (для отладки)
 @bot.message_handler(regexp='[Uu]ser [Dd]ev[0-9]')
 def user_dev(message, res=False):
     dev = message.text[5:].lower()
-    user, chat = helpers.get_dev_user(dev)
-    result = str(user) + str(chat)
-    bot.send_message(message.chat.id, result, reply_to_message_id=message.message_id)
+    dev_username, dev_user_chat_id = helpers.get_dev_user(dev)
+    answer = f'@{dev_username} -> {dev_user_chat_id}'
+    bot.reply_to(message, answer)
 
 # Запускаем бота
 # Можно использовать try/except с бесконечным циклом, но есть риск попасть в infinityloop
