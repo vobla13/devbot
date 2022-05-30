@@ -38,16 +38,19 @@ def take_dev(message):
     candidate_username = message.from_user.username
     candidate_chat_id = message.chat.id
     dev_username, dev_user_chat_id = helpers.get_dev_user(dev)
-    
+
+
     # Проверяем, что dev существует
     if helpers.get_dev_status(dev) is False:
         bot.reply_to(message, f'{dev} не существует!')
-    
+
+
     # Проверяем, что dev занят
     # Если False, то записываем запрашивающего хозяином и возвращаем ему ответ с успешным статусом
     elif helpers.check_dev_busy(dev) is False:
         answer = helpers.set_dev_user(dev, candidate_username, candidate_chat_id)    
         bot.reply_to(message, answer)
+
     
     # Если True и там кто-то уже есть.
     else:
@@ -69,20 +72,17 @@ def take_dev(message):
         @bot.callback_query_handler(func=lambda call: True)
         def callback_query(call):
             # Прокидываем данные из колбека внутрь функции
-            action = call.data.split("_")[0]
-            dev = call.data.split("_")[1]
-            candidate_username = call.data.split("_")[2]
-            candidate_chat_id = call.data.split("_")[3]
+            action, dev, candidate_username, candidate_chat_id = call.data.split("_")
             
             if action == 'yes':
                 bot.answer_callback_query(call.id, "Спасибо :)")
                 helpers.free_dev(dev)
                 answer = helpers.set_dev_user(dev, candidate_username, candidate_chat_id)
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Отдал {dev} -> @{candidate_username}')
+                bot.edit_message_text(call.message.chat.id, call.message.message_id, text=f'Отдал {dev} -> @{candidate_username}')
                 bot.send_message(candidate_chat_id, answer)
             else:
                 bot.answer_callback_query(call.id, "Ну ладно :)")
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Оставил {dev}')
+                bot.edit_message_text(call.message.chat.id, call.message.message_id, text=f'Оставил {dev}')
                 # bot.edit_message_reply_markup(call.from_user.id, call.message.message_id, reply_markup=())
                 bot.send_message(candidate_chat_id, f'Подожди, {dev} еще нужен!')
 
@@ -106,6 +106,7 @@ def user_dev(message, res=False):
     dev_username, dev_user_chat_id = helpers.get_dev_user(dev)
     answer = f'@{dev_username} -> {dev_user_chat_id}'
     bot.reply_to(message, answer)
+
 
 # Запускаем бота
 # Можно использовать try/except с бесконечным циклом, но есть риск попасть в infinityloop
