@@ -79,11 +79,11 @@ def take_dev(message):
                 bot.answer_callback_query(call.id, "Спасибо :)")
                 helpers.free_dev(dev)
                 answer = helpers.set_dev_user(dev, candidate_username, candidate_chat_id)
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Отдал {dev} -> @{candidate_username}')
+                bot.edit_message_text(call.message.chat.id, call.message.message_id, text=f'Отдал {dev} -> @{candidate_username}')
                 bot.send_message(candidate_chat_id, answer)
             else:
                 bot.answer_callback_query(call.id, "Ну ладно :)")
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'Оставил {dev}')
+                bot.edit_message_text(call.message.chat.id, call.message.message_id, text=f'Оставил {dev}')
                 # bot.edit_message_reply_markup(call.from_user.id, call.message.message_id, reply_markup=())
                 bot.send_message(candidate_chat_id, f'Подожди, {dev} еще нужен!')
 
