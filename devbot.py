@@ -1,5 +1,6 @@
-import telebot
+import os.path
 import helpers
+import telebot
 from telebot import TeleBot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -38,16 +39,19 @@ def take_dev(message):
     candidate_username = message.from_user.username
     candidate_chat_id = message.chat.id
     dev_username, dev_user_chat_id = helpers.get_dev_user(dev)
-    
+
+
     # Проверяем, что dev существует
     if helpers.get_dev_status(dev) is False:
         bot.reply_to(message, f'{dev} не существует!')
-    
+
+
     # Проверяем, что dev занят
     # Если False, то записываем запрашивающего хозяином и возвращаем ему ответ с успешным статусом
     elif helpers.check_dev_busy(dev) is False:
         answer = helpers.set_dev_user(dev, candidate_username, candidate_chat_id)    
         bot.reply_to(message, answer)
+
     
     # Если True и там кто-то уже есть.
     else:
@@ -69,10 +73,7 @@ def take_dev(message):
         @bot.callback_query_handler(func=lambda call: True)
         def callback_query(call):
             # Прокидываем данные из колбека внутрь функции
-            action = call.data.split("_")[0]
-            dev = call.data.split("_")[1]
-            candidate_username = call.data.split("_")[2]
-            candidate_chat_id = call.data.split("_")[3]
+            action, dev, candidate_username, candidate_chat_id = call.data.split("_")
             
             if action == 'yes':
                 bot.answer_callback_query(call.id, "Спасибо :)")
@@ -96,7 +97,7 @@ def take_dev(message):
 def free_dev(message, res=False):
     dev = message.text[5:].lower()
     answer = helpers.free_dev(dev)
-    bot.send_message(message, answer)
+    bot.reply_to(message, answer)
 
 
 # Возвращает пользователя на dev (для отладки)
@@ -107,7 +108,20 @@ def user_dev(message, res=False):
     answer = f'@{dev_username} -> {dev_user_chat_id}'
     bot.reply_to(message, answer)
 
+
+# Устанавливает дефолтные настройки в файл data
+@bot.message_handler(commands=['reset'])
+def setup_default(message, res=False):
+    helpers.setup()
+    bot.reply_to(message, 'Установлены дефолтные настройки')
+
+
 # Запускаем бота
 # Можно использовать try/except с бесконечным циклом, но есть риск попасть в infinityloop
 # Возможно, решается таской, которая будет перезапускать бота при падении
+
+# Проверяем, есть ли файл 'data', в котором хранится текущий стейт devs
+# Если такого нет, создаем файл с дефолтными настройками
+if os.path.isfile('data') is False:
+    helpers.setup()
 bot.infinity_polling(interval=0, timeout=20)

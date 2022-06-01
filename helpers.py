@@ -1,10 +1,11 @@
+import pickle
 from datetime import datetime
 from datetime import timedelta
 
 
 
 
-# Converts timedelta to days, hours, minutes and seconds
+# Функция преобразования datetime в удобочитаемый формат
 def timedelta_format(duration):
     days, seconds = duration.days, duration.seconds
     hours = seconds // 3600
@@ -13,10 +14,23 @@ def timedelta_format(duration):
     return days, hours, minutes, seconds
 
 
-# Setup devs and their status
-# Костыль: перейти на класс и передавать объект класса в словарь
-# Хранить состояение классов в JSON и поднимать при перезапуске бота
-devs = {
+# Сохранем devs в файл
+def save_state(devs):
+    with open('data', 'wb') as f:
+        pickle.dump(devs, f)
+
+
+# Загружаем devs из файла
+def load_state():
+    devs = {}
+    with open('data', 'rb') as f:
+        devs = pickle.load(f)
+    return devs
+
+
+# дефолтные devs в файл data
+def setup():
+    devs = {
         'dev2': {'user': 'free', 'chat_id:': 0, 'time': datetime.now()},
         'dev3': {'user': 'free', 'chat_id:': 0, 'time': datetime.now()},
         'dev4': {'user': 'free', 'chat_id:': 0, 'time': datetime.now()},
@@ -29,6 +43,7 @@ devs = {
         'dev11': {'user': 'free', 'chat_id:': 0, 'time': datetime.now()},
         'dev12': {'user': 'free', 'chat_id:': 0, 'time': datetime.now()}
     }
+    save_state(devs)
 
 
 # Get tg_bot token
@@ -42,6 +57,7 @@ def get_bot_token():
 
 # Get <user_name>, <chat_id> by <dev>
 def get_dev_user(dev):
+    devs = load_state()
     current_dev = devs.get(dev)
     if current_dev is not None:
         user = current_dev.get('user')
@@ -53,6 +69,7 @@ def get_dev_user(dev):
 
 # Get <dev> status
 def get_dev_status(dev):
+    devs = load_state()
     current_dev = devs.get(dev)
     if current_dev is not None:
         d, h, m, s = timedelta_format(datetime.now() - current_dev.get('time'))
@@ -66,6 +83,7 @@ def get_dev_status(dev):
 
 # Returns all <dev> status
 def get_all_status():
+    devs = load_state()
     result = ''
     for dev in devs:
         user, time, chat_id = get_dev_status(dev)
@@ -75,6 +93,7 @@ def get_all_status():
 
 # Check <dev> for existing <user>: returns True if <user> is not 'free'
 def check_dev_busy(dev):
+    devs = load_state()
     current_dev = devs.get(dev)
     if current_dev is not None:
         if current_dev['user'] != 'free':
@@ -84,13 +103,14 @@ def check_dev_busy(dev):
 
 
 # Set <user> to <dev>: returns <dev> status if <dev> have existing <user>
-# Порефакторить
 def set_dev_user(dev, user, chat_id):
+    devs = load_state()
     current_dev = devs.get(dev)
     if current_dev is not None:
         current_dev['user'] = user
         current_dev['time'] = datetime.now()
         current_dev['chat_id'] = chat_id
+        save_state(devs)
         return f'{dev} занял @{user}'
     else:
         return f'{dev} не существует!'
@@ -98,11 +118,13 @@ def set_dev_user(dev, user, chat_id):
 
 # Reset <dev> status to "Free"
 def free_dev(dev):
+    devs = load_state()
     current_dev = devs.get(dev)
     if current_dev is not None:
         current_dev['user'] = 'free'
         current_dev['time'] = datetime.now()
         current_dev['chat_id'] = None
+        save_state(devs)
         return f'{dev} теперь свободен!'
     else:
         return f'{dev} не существует!'

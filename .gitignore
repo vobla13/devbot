@@ -3,4 +3,5 @@
 /.vscode
 /.DS_Store
 setup
+data
 devbot.code-workspace
