@@ -122,6 +122,7 @@ def setup_default(message, res=False):
 
 # Проверяем, есть ли файл 'data', в котором хранится текущий стейт devs
 # Если такого нет, создаем файл с дефолтными настройками
-if os.path.isfile('data') is False:
-    helpers.setup()
-bot.infinity_polling(interval=0, timeout=20)
+if __name__ == '__main__':
+    if os.path.isfile('data') is False:
+        helpers.setup()
+    bot.infinity_polling()

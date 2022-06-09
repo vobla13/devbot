@@ -87,7 +87,7 @@ def get_all_status():
     result = ''
     for dev in devs:
         user, time, chat_id = get_dev_status(dev)
-        result += f'{dev} | @{user} {time} | {chat_id}\n'
+        result += f'{dev} | @{user} {time}\n'
     return result
 
 
